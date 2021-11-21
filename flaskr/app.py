@@ -3,6 +3,7 @@ import os
 from flask import Flask
 from flask_restful import Api
 
+from vistas.vista_health import VistaHealth
 from vistas.vista_loging import VistaSignUp, VistaLogIn
 from vistas.vistas_tareas import VistaTareas, VistaTarea, VistaArchivo, VistaTareasTest
 from modelos.modelos import db
@@ -39,7 +40,7 @@ api.add_resource(VistaArchivo, '/api/files/<string:filename>')
 api.add_resource(VistaSignUp, '/api/auth/signup')
 api.add_resource(VistaLogIn, '/api/auth/login')
 api.add_resource(VistaTareasTest, '/api/tasks/carga')
-
+api.add_resource(VistaHealth, '/')
 
 
 
