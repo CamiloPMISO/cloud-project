@@ -1,0 +1,8 @@
+*/env*
+*/venv*
+.circleci*
+*.env
+*.log
+.git
+.gitignore
+.vscode

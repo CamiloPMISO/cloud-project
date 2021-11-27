@@ -10,9 +10,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from modelos.modelos import db, Usuario, Tareas, TareasSchema
 
-aws_access_key_id = os.getenv('AWS_ACCES_KEY_ID')
-aws_secret_access_key = os.getenv('AWS_SECRET_ACCES_KEY')
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 aws_session_token = os.getenv('AWS_SESSION_TOKEN')
+sqs_queue_name = os.getenv('SQS_QUEUE_NAME')
+sqs_queue_url = os.getenv('SQS_QUEUE_URL')
 
 resource = boto3.resource(
     's3',
@@ -23,11 +25,21 @@ resource = boto3.resource(
 
 tareas_schema = TareasSchema()
 
-redis_host = os.getenv('REDIS_HOST')
+celery_app = Celery(__name__, broker="sqs://")
 
-celery_app = Celery(__name__, broker = f'redis://{redis_host}:6379/0')
+celery_app.conf["task_default_queue"] = sqs_queue_name
+celery_app.conf["worker_enable_remote_control"] = False
+celery_app.conf["worker_send_task_events"] = False
 
-@celery_app.task(name = 'process_audio')
+celery_app.conf["broker_transport_options"] = {
+    'predefined_queues': {
+       f'{sqs_queue_name}' : {
+            'url': sqs_queue_url
+        }
+    }
+}
+
+@celery_app.task(name = sqs_queue_name)
 def process_audio(*args):
     pass
 class VistaTareas(Resource):
@@ -49,7 +61,6 @@ class VistaTareas(Resource):
 
         return [ tareas_schema.dump(tarea) for tarea in tareas]
             
-
     @jwt_required()
     def post(self):
 
@@ -82,7 +93,7 @@ class VistaTareas(Resource):
         db.session.commit()
 
         args = (tarea.id,)
-        process_audio.apply_async(args = args, queue = 'process_audio')
+        process_audio.apply_async(args = args, queue = sqs_queue_name)
 
         return "Empezo procesamiento", 202
 
@@ -119,7 +130,7 @@ class VistaTareasTest(Resource):
         db.session.commit()
 
         args = (tarea.id,)
-        process_audio.apply_async(args = args, queue = 'process_audio')
+        process_audio.apply_async(args = args, queue = sqs_queue_name)
 
         return "Empezo procesamiento", 202
 class VistaTarea(Resource):
@@ -150,7 +161,7 @@ class VistaTarea(Resource):
         db.session.commit()
 
         args = (tarea.id,)
-        process_audio.apply_async(args = args, queue = 'process_audio')
+        process_audio.apply_async(args = args, queue = sqs_queue_name)
 
         return tareas_schema.dump(tarea)
 
