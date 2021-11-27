@@ -28,6 +28,8 @@ celery_app.conf["task_default_queue"] = sqs_queue_name
 celery_app.conf["worker_enable_remote_control"] = False
 celery_app.conf["worker_send_task_events"] = False
 
+
+
 celery_app.conf["broker_transport_options"] = {
     'predefined_queues': {
        f'{sqs_queue_name}': {

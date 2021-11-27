@@ -202,7 +202,7 @@ class VistaArchivo(Resource):
         download_file_exist = os.path.exists(download_file)
 
         if download_file_exist :
-            return send_from_directory(directory="downloads", filename=filename)
+            return send_from_directory(directory="downloads", path=filename)
 
 
         return "No se encontro el archivo en el servidor", 500
